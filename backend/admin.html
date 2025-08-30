@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Admin Panel</title>
+<style>
+body { font-family: Arial, sans-serif; margin:20px; }
+input { padding:8px; margin-right:10px; }
+table { border-collapse: collapse; width:100%; margin-top:20px; }
+th,td { border:1px solid #ccc; padding:8px; text-align:left; }
+</style>
+</head>
+<body>
+<h2>Admin Login</h2>
+<div id="loginBox">
+<input type="password" id="password" placeholder="Enter password">
+<button onclick="login()">Login</button>
+<p id="loginMsg"></p>
+</div>
+<div id="dataBox" style="display:none;">
+<h2>Spin Results</h2>
+<button onclick="exportCSV()">Export CSV</button>
+<table id="results">
+<thead><tr><th>Name</th><th>Contact</th><th>Prize</th><th>Timestamp</th></
+tr></thead>
+<tbody></tbody>
+</table>
+</div>
+<script>
+async function login(){
+const password = document.getElementById('password').value;
+const res = await fetch('/admin/login', {
+method:'POST', headers:{'Content-Type':'application/json'},
+body: JSON.stringify({ password })
+});
+const data = await res.json();
+if (data.success) {
+document.getElementById('loginBox').style.display = 'none';
+loadData();
+} else {
+document.getElementById('loginMsg').innerText = 'Wrong password!';
+}
+}
+async function loadData(){
+document.getElementById('dataBox').style.display = 'block';
+const res = await fetch('/admin/data');
+const rows = await res.json();
+const tbody = document.querySelector('#results tbody');
+tbody.innerHTML = '';
+rows.forEach(r => {
+const tr = document.createElement('tr');
+tr.innerHTML = `<td>${r.name || ''}</td><td>${r.contact || ''}</td><td>$
+{r.prize || ''}</td><td>${r.timestamp || ''}</td>`;
+tbody.appendChild(tr);
+});
+}
+function exportCSV(){
+window.location.href = '/admin/export';
+}
+</script>
+</body>
+</html>
