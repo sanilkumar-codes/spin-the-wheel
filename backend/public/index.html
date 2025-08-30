@@ -46,8 +46,7 @@ canvas.confetti { position:fixed; top:0; left:0; pointer-events:none; }
 <canvas class="confetti" id="confetti"></canvas>
 <script>
 // --- Edit gifts here ---
-const gifts = ["Gift Card", "Headphones", "T-Shirt", "Mug", "Pen", "Discount
-Coupon"];
+const gifts = ["Gift Card", "Headphones", "T-Shirt", "Mug", "Pen", "Discount Coupon"];
 // Build wheel
 const wheel = document.getElementById('wheel');
 const num = gifts.length;
@@ -57,8 +56,7 @@ seg.className = 'segment';
 const angle = 360 / num;
 seg.style.transform = `rotate(${angle * i}deg) skewY(${90 - angle}deg)`;
 seg.style.background = i % 2 === 0 ? '#1976d2' : '#ef6c00';
-seg.innerHTML = `<span style="display:inline-block; transform: skewY(-${90 -
-angle}deg) rotate(${angle/2}deg);">${gifts[i]}</span>`;
+seg.innerHTML = `<span style="display:inline-block; transform: skewY(-${90 - angle}deg) rotate(${angle/2}deg);">${gifts[i]}</span>`;
 wheel.appendChild(seg);
 }
 let spinning = false;
@@ -77,8 +75,7 @@ const prize = gifts[idx];
 document.getElementById('result').innerText = `🎉 You won: ${prize}`;
 launchConfetti();
 // send to backend
-await fetch('/saveResult', { method:'POST', headers:{'Content-
-Type':'application/json'}, body: JSON.stringify({ prize }) });
+await fetch('/saveResult', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prize }) });
 spinning = false;
 }, 5200);
 }
@@ -95,9 +92,15 @@ requestAnimationFrame(draw);
 }
 function draw(){
 ctx.clearRect(0,0,canvas.width,canvas.height);
-confetti.forEach(c => { ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0,
-Math.PI*2); ctx.fillStyle = `hsl(${Math.random()*360},100%,50%)`; ctx.fill();
-c.y += c.s; if (c.y > canvas.height) c.y = -10; });
+confetti.forEach(c => { 
+ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0,
+Math.PI*2); 
+ctx.fillStyle = `hsl(${Math.random()*360},100%,50%)`; 
+ctx.fill();
+c.y += c.s; 
+if (c.y > canvas.height) 
+  c.y = -10; 
+});
 requestAnimationFrame(draw);
 }
 // Flow: on load check if user already played
@@ -107,8 +110,7 @@ const res = await fetch('/checkUser');
 const data = await res.json();
 if (data.alreadyPlayed) {
 document.getElementById('game').style.display = 'block';
-document.getElementById('result').innerText = `You already won: $
-{data.prize || '—'}`;
+document.getElementById('result').innerText = `You already won: ${data.prize || '—'}`;
 } else {
 document.getElementById('form').style.display = 'block';
 }
@@ -122,8 +124,7 @@ document.getElementById('continueBtn').addEventListener('click', async () => {
 const name = document.getElementById('name').value.trim();
 const contact = document.getElementById('contact').value.trim();
 if (!name || !contact) return alert('Please enter name and contact');
-await fetch('/register', { method:'POST', headers:{'Content-
-Type':'application/json'}, body: JSON.stringify({ name, contact }) });
+await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, contact }) });
 document.getElementById('form').style.display = 'none';
 document.getElementById('game').style.display = 'block';
 });
