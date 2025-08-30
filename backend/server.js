@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const { Pool } = require('pg');
 const { google } = require('googleapis');
+const sheets = require("./sheets");
 const app = express();
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -38,20 +39,19 @@ let sheetsClient = null;
 const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '';
 (async () => {
 try {
-if (fs.existsSync(path.join(__dirname, 'credentials.json'))) {
-const credentials = JSON.parse(fs.readFileSync(path.join(__dirname,
-'credentials.json')));
-const auth = new google.auth.GoogleAuth({
-credentials,
-scopes: ['https://www.googleapis.com/auth/spreadsheets']
-});
-const authClient = await auth.getClient();
-sheetsClient = google.sheets({ version: 'v4', auth: authClient });
-console.log('Google Sheets client ready');
+if (process.env.GOOGLE_CREDENTIALS) {
+  const credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: ['https://www.googleapis.com/auth/spreadsheets']
+  });
+  const authClient = await auth.getClient();
+  sheetsClient = google.sheets({ version: 'v4', auth: authClient });
+  console.log('Google Sheets client ready (via ENV)');
 } else {
-console.warn('No credentials.json found. Google Sheets updates will be
-disabled.');
+  console.warn('No Google credentials found. Sheets integration disabled.');
 }
+
 } catch (e) {
 console.error('Google Sheets init error', e);
 }
