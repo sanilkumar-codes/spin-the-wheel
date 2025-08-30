@@ -51,85 +51,80 @@ const gifts = ["Gift Card", "Headphones", "T-Shirt", "Mug", "Pen", "Discount Cou
 const wheel = document.getElementById('wheel');
 const num = gifts.length;
 for (let i = 0; i < num; i++) {
-const seg = document.createElement('div');
-seg.className = 'segment';
-const angle = 360 / num;
-seg.style.transform = `rotate(${angle * i}deg) skewY(${90 - angle}deg)`;
-seg.style.background = i % 2 === 0 ? '#1976d2' : '#ef6c00';
-seg.innerHTML = `<span style="display:inline-block; transform: skewY(-${90 - angle}deg) rotate(${angle/2}deg);">${gifts[i]}</span>`;
-wheel.appendChild(seg);
+  const seg = document.createElement('div');
+  seg.className = 'segment';
+  const angle = 360 / num;
+  seg.style.transform = `rotate(${angle * i}deg) skewY(${90 - angle}deg)`;
+  seg.style.background = i % 2 === 0 ? '#1976d2' : '#ef6c00';
+  seg.innerHTML = `<span style="display:inline-block; transform: skewY(-${90 - angle}deg) rotate(${angle/2}deg);">${gifts[i]}</span>`;
+  wheel.appendChild(seg);
 }
 let spinning = false;
 function spin() {
-if (spinning) return;
-spinning = true;
-const spins = 5 + Math.floor(Math.random() * 4); // 5-8 full spins
-const randomDeg = Math.floor(Math.random() * 360);
-const deg = spins * 360 + randomDeg;
-wheel.style.transform = `rotate(${deg}deg)`;
-setTimeout(async () => {
-const landed = deg % 360;
-const segmentSize = 360 / num;
-const idx = Math.floor((num - (landed / segmentSize)) % num);
-const prize = gifts[idx];
-document.getElementById('result').innerText = `🎉 You won: ${prize}`;
-launchConfetti();
-// send to backend
-await fetch('/saveResult', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prize }) });
-spinning = false;
-}, 5200);
+  if (spinning) return;
+  spinning = true;
+  const spins = 5 + Math.floor(Math.random() * 4); // 5-8 full spins
+  const randomDeg = Math.floor(Math.random() * 360);
+  const deg = spins * 360 + randomDeg;
+  wheel.style.transform = `rotate(${deg}deg)`;
+  setTimeout(async () => {
+    const landed = deg % 360;
+    const segmentSize = 360 / num;
+    const idx = Math.floor((num - (landed / segmentSize)) % num);
+    const prize = gifts[idx];
+    document.getElementById('result').innerText = `🎉 You won: ${prize}`;
+    launchConfetti();
+    // send to backend
+    await fetch('/saveResult', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prize }) });
+    spinning = false;
+  }, 5200);
 }
-// Confetti (simple)
+
+// --- Confetti (stops after 5 seconds) ---
 const canvas = document.getElementById('confetti');
 const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 let confetti = [];
-function launchConfetti(){
-confetti = Array.from({ length: 120 }, () => ({ x:
-Math.random()*canvas.width, y: Math.random()*-canvas.height, r:
-Math.random()*6+4, s: Math.random()*3+2, d: Math.random()*Math.PI*2 }));
-requestAnimationFrame(draw);
+let confettiAnimationId = null;
+
+function launchConfetti() {
+  confetti = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * -canvas.height,
+    r: Math.random() * 6 + 4,
+    s: Math.random() * 3 + 2,
+    d: Math.random() * Math.PI * 2
+  }));
+
+  // Stop any previous animation
+  if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId);
+
+  const startTime = Date.now();
+
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    confetti.forEach(c => {
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2);
+      ctx.fillStyle = `hsl(${Math.random()*360},100%,50%)`;
+      ctx.fill();
+      c.y += c.s;
+      if (c.y > canvas.height) c.y = -10;
+    });
+
+    if (Date.now() - startTime < 5000) {
+      confettiAnimationId = requestAnimationFrame(draw);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti = [];
+      confettiAnimationId = null;
+    }
+  }
+
+  draw();
 }
-function draw(){
-ctx.clearRect(0,0,canvas.width,canvas.height);
-confetti.forEach(c => { 
-ctx.beginPath(); ctx.arc(c.x, c.y, c.r, 0,
-Math.PI*2); 
-ctx.fillStyle = `hsl(${Math.random()*360},100%,50%)`; 
-ctx.fill();
-c.y += c.s; 
-if (c.y > canvas.height) 
-  c.y = -10; 
-});
-requestAnimationFrame(draw);
-}
-// Flow: on load check if user already played
-window.onload = async () => {
-try {
-const res = await fetch('/checkUser');
-const data = await res.json();
-if (data.alreadyPlayed) {
-document.getElementById('game').style.display = 'block';
-document.getElementById('result').innerText = `You already won: ${data.prize || '—'}`;
-} else {
-document.getElementById('form').style.display = 'block';
-}
-} catch (e) {
-// still show form if backend unreachable
-document.getElementById('form').style.display = 'block';
-}
-}
-// Submit details
-document.getElementById('continueBtn').addEventListener('click', async () => {
-const name = document.getElementById('name').value.trim();
-const contact = document.getElementById('contact').value.trim();
-if (!name || !contact) return alert('Please enter name and contact');
-await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, contact }) });
-document.getElementById('form').style.display = 'none';
-document.getElementById('game').style.display = 'block';
-});
-// Spin button
-document.getElementById('spinBtn').addEventListener('click', spin);
 </script>
+
 </body>
 </html>
