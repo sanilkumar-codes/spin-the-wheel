@@ -6,7 +6,6 @@ const path = require('path');
 const fs = require('fs');
 const { Pool } = require('pg');
 const { google } = require('googleapis');
-const sheets = require("./sheets");
 const app = express();
 app.use(bodyParser.json());
 app.use(cookieParser());
