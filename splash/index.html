@@ -3,67 +3,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Spin the Wheel - Loading</title>
+  <title>Loading...</title>
   <style>
     body {
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-      font-family:sans-serif;
-      background:#f4f4f4;
-      text-align:center;
-      margin:0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f7f7f7;
+    }
+    .loader {
+      text-align: center;
     }
     .spinner {
-      border: 8px solid #ddd;
-      border-top: 8px solid teal;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
       border-radius: 50%;
-      width: 80px;
-      height: 80px;
+      width: 50px;
+      height: 50px;
       animation: spin 1s linear infinite;
-      margin-bottom:20px;
+      margin: auto;
     }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    h2 {
-      margin:10px 0;
+    p {
+      margin-top: 12px;
+      color: #333;
     }
   </style>
 </head>
 <body>
-  <div class="spinner"></div>
-  <h2>Preparing your Spin 🎡...</h2>
-  <p>Please wait, this may take a few seconds.</p>
+  <div class="loader">
+    <div class="spinner"></div>
+    <p>Preparing your spin...</p>
+  </div>
 
   <script>
-    // Your backend URL (Render app)
-    const backendUrl = "https://spin-the-wheel-ksk3.onrender.com";
-
-    async function waitForBackend() {
-      let ready = false;
-      while (!ready) {
-        try {
-          // ping backend
-          const res = await fetch(backendUrl + "/checkUser");
-          if (res.ok) {
-            ready = true;
-            // ✅ Redirect to the actual spin page served by backend
-            window.location.href = backendUrl + "/index.html";
-            return;
-          }
-        } catch(e) {
-          // backend still waking up
+    async function checkBackend() {
+      try {
+        const response = await fetch("https://spin-the-wheel-ksk3.onrender.com/health");
+        if (response.ok) {
+          window.location.href = "/main.html"; // 👉 your actual app page
+        } else {
+          setTimeout(checkBackend, 2000);
         }
-        // wait 3s before retry
-        await new Promise(r => setTimeout(r, 3000));
+      } catch (err) {
+        console.log("Backend not ready, retrying...");
+        setTimeout(checkBackend, 2000);
       }
     }
-
-    waitForBackend();
+    checkBackend();
   </script>
 </body>
 </html>
