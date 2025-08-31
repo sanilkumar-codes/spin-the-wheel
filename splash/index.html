@@ -43,20 +43,23 @@
   </div>
 
   <script>
-    async function checkBackend() {
-      try {
-        const response = await fetch("https://spin-the-wheel-ksk3.onrender.com/health");
-        if (response.ok) {
-          window.location.href = "/main.html"; // 👉 your actual app page
-        } else {
-          setTimeout(checkBackend, 2000);
-        }
-      } catch (err) {
-        console.log("Backend not ready, retrying...");
+  const backendUrl = "https://spin-the-wheel-ksk3.onrender.com";
+
+  async function checkBackend() {
+    try {
+      const response = await fetch(backendUrl + "/health");
+      if (response.ok) {
+        window.location.href = backendUrl; // go to Render root where index.html is served
+      } else {
         setTimeout(checkBackend, 2000);
       }
+    } catch (err) {
+      console.log("Backend not ready, retrying...");
+      setTimeout(checkBackend, 2000);
     }
-    checkBackend();
-  </script>
+  }
+  checkBackend();
+</script>
+
 </body>
 </html>
