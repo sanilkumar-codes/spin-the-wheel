@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spin the Wheel - Loading</title>
+  <style>
+    body {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      font-family:sans-serif;
+      background:#f4f4f4;
+      text-align:center;
+    }
+    .spinner {
+      border: 8px solid #ddd;
+      border-top: 8px solid teal;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      animation: spin 1s linear infinite;
+      margin-bottom:20px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="spinner"></div>
+  <h2>Preparing your Spin 🎡...</h2>
+  <p>Please wait a moment...</p>
+
+  <script>
+    // Replace with your backend URL on Render/Railway
+    const backendUrl = "https://spin-the-wheel-ksk3.onrender.com/";
+
+    async function waitForBackend() {
+      let ready = false;
+      while (!ready) {
+        try {
+          const res = await fetch(backendUrl + "/checkUser", { method: "GET" });
+          if (res.ok) {
+            ready = true;
+            window.location.href = backendUrl; // redirect to game
+          }
+        } catch(e) {
+          // backend still asleep, retry
+        }
+        await new Promise(r => setTimeout(r, 3000)); // retry every 3s
+      }
+    }
+
+    waitForBackend();
+  </script>
+</body>
+</html>
