@@ -4,7 +4,14 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const { Pool } = require('pg');
 const { google } = require('googleapis');
+const cors = require('cors');
+
 const app = express();
+
+// ✅ Allow frontend (Netlify) to call backend (Render)
+app.use(cors({
+  origin: "*" // 👉 replace * with "https://your-site.netlify.app" for security
+}));
 
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -55,6 +62,12 @@ const SPREADSHEET_ID = process.env.SPREADSHEET_ID || '';
 })();
 
 // ----- Routes -----
+
+// ✅ Health check for Netlify splash screen
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
 // Check if user already played
 app.get('/checkUser', async (req, res) => {
   try {
