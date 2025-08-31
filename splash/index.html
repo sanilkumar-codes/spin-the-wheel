@@ -14,6 +14,7 @@
       font-family:sans-serif;
       background:#f4f4f4;
       text-align:center;
+      margin:0;
     }
     .spinner {
       border: 8px solid #ddd;
@@ -28,30 +29,37 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+    h2 {
+      margin:10px 0;
+    }
   </style>
 </head>
 <body>
   <div class="spinner"></div>
   <h2>Preparing your Spin 🎡...</h2>
-  <p>Please wait a moment...</p>
+  <p>Please wait, this may take a few seconds.</p>
 
   <script>
-    // Replace with your backend URL on Render/Railway
-    const backendUrl = "https://spin-the-wheel-ksk3.onrender.com/";
+    // Your backend URL (Render app)
+    const backendUrl = "https://spin-the-wheel.onrender.com";
 
     async function waitForBackend() {
       let ready = false;
       while (!ready) {
         try {
-          const res = await fetch(backendUrl + "/checkUser", { method: "GET" });
+          // ping backend
+          const res = await fetch(backendUrl + "/checkUser");
           if (res.ok) {
             ready = true;
-            window.location.href = backendUrl; // redirect to game
+            // ✅ Redirect to the actual spin page served by backend
+            window.location.href = backendUrl + "/index.html";
+            return;
           }
         } catch(e) {
-          // backend still asleep, retry
+          // backend still waking up
         }
-        await new Promise(r => setTimeout(r, 3000)); // retry every 3s
+        // wait 3s before retry
+        await new Promise(r => setTimeout(r, 3000));
       }
     }
 
