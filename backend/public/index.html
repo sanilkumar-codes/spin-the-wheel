@@ -14,8 +14,8 @@ body {
   justify-content: center;
   min-height: 100vh;
   font-family: 'Arial', sans-serif;
-  background: #000; /* Black background */
-  color: #dec7a6; /* Default text color */
+  background: #000;
+  color: #dec7a6;
 }
 
 .container {
@@ -147,12 +147,11 @@ function drawWheel() {
     ctx.fillStyle = colors[i % colors.length];
     ctx.fill();
 
-    // Draw text along radius
     ctx.save();
     ctx.translate(radius, radius);
     ctx.rotate(i * angle + angle / 2);
     ctx.textAlign = "right";
-    ctx.fillStyle = i % 2 === 0 ? "#000" : "#dec7a6"; // Contrast text
+    ctx.fillStyle = i % 2 === 0 ? "#000" : "#dec7a6";
     ctx.font = "bold 16px Arial";
     ctx.fillText(gifts[i], radius - 10, 5);
     ctx.restore();
@@ -163,44 +162,6 @@ drawWheel();
 
 let spinning = false;
 let currentRotation = 0;
-
-function spin() {
-  if (spinning) return;
-  spinning = true;
-
-  const spins = 5 + Math.floor(Math.random() * 4); // 5-8 full spins
-  const randomDeg = Math.random() * 360;
-  const totalDeg = spins * 360 + randomDeg;
-  const targetRotation = currentRotation + totalDeg;
-
-  wheelCanvas.style.transition = 'transform 5s cubic-bezier(.33,1,.68,1)';
-  wheelCanvas.style.transform = `rotate(${targetRotation}deg)`;
-
-  setTimeout(async () => {
-    currentRotation = targetRotation % 360;
-
-    // --- Correct prize calculation with top pointer ---
-    const rotationDeg = currentRotation % 360;
-    const adjustedDeg = (rotationDeg + 90) % 360;
-    const anglePerSegment = 360 / numSegments;
-    const index = Math.floor(numSegments - (adjustedDeg / anglePerSegment)) % numSegments;
-    const prize = gifts[index];
-
-    document.getElementById('result').innerText =
-      `🎉 You won: ${prize}! Show this screen to the Salon manager to claim your reward.`;
-
-    launchConfetti();
-    spinning = false;
-    document.getElementById('spinBtn').disabled = true;
-
-    // Send result to backend
-    await fetch('/saveResult', {
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ prize })
-    });
-  }, 5200);
-}
 
 // --- Confetti ---
 const canvas = document.getElementById('confetti');
@@ -238,40 +199,75 @@ function launchConfetti() {
   draw();
 }
 
-// --- On load ---
-window.onload = async () => {
-  try {
-    const res = await fetch('/checkUser');
-    const data = await res.json();
-    if (data.alreadyPlayed) {
-      document.getElementById('game').style.display = 'block';
-      document.getElementById('result').innerText =
-        `You already won: ${data.prize || '—'}! Show this screen to the Salon manager to claim your reward.`;
-      document.getElementById('spinBtn').disabled = true;
-    } else {
-      document.getElementById('form').style.display = 'block';
-    }
-  } catch {
-    document.getElementById('form').style.display = 'block';
-  }
-};
+// --- Spin function ---
+function spin(contact) {
+  if (spinning) return;
+  spinning = true;
 
-// --- Submit user details ---
+  const spins = 5 + Math.floor(Math.random() * 4);
+  const randomDeg = Math.random() * 360;
+  const totalDeg = spins * 360 + randomDeg;
+  const targetRotation = currentRotation + totalDeg;
+
+  wheelCanvas.style.transition = 'transform 5s cubic-bezier(.33,1,.68,1)';
+  wheelCanvas.style.transform = `rotate(${targetRotation}deg)`;
+
+  setTimeout(async () => {
+    currentRotation = targetRotation % 360;
+    const rotationDeg = currentRotation % 360;
+    const adjustedDeg = (rotationDeg + 90) % 360;
+    const anglePerSegment = 360 / numSegments;
+    const index = Math.floor(numSegments - (adjustedDeg / anglePerSegment)) % numSegments;
+    const prize = gifts[index];
+
+    document.getElementById('result').innerText =
+      `🎉 You won: ${prize}! Show this screen to the Salon manager to claim your reward.`;
+
+    launchConfetti();
+    spinning = false;
+    document.getElementById('spinBtn').disabled = true;
+
+    await fetch('/saveResult', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ contact, prize })
+    });
+  }, 5200);
+}
+
+// --- Check contact ---
+async function checkContact(contact) {
+  const res = await fetch(`/checkUser?contact=${encodeURIComponent(contact)}`);
+  return await res.json();
+}
+
+// --- Form submit ---
 document.getElementById('continueBtn').addEventListener('click', async () => {
   const name = document.getElementById('name').value.trim();
   const contact = document.getElementById('contact').value.trim();
   if (!name || !contact) return alert('Please enter name and contact');
-  await fetch('/register', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ name, contact })
+
+  const data = await checkContact(contact);
+  if (data.alreadyPlayed) {
+    document.getElementById('game').style.display = 'block';
+    document.getElementById('result').innerText =
+      `You already won: ${data.prize}! Show this screen to the Salon manager to claim your reward.`;
+    document.getElementById('spinBtn').disabled = true;
+    document.getElementById('form').style.display = 'none';
+    return;
+  }
+
+  await fetch('/register', { 
+    method:'POST', 
+    headers:{'Content-Type':'application/json'}, 
+    body: JSON.stringify({ name, contact }) 
   });
+
   document.getElementById('form').style.display = 'none';
   document.getElementById('game').style.display = 'block';
-});
 
-// --- Spin button ---
-document.getElementById('spinBtn').addEventListener('click', spin);
+  document.getElementById('spinBtn').addEventListener('click', () => spin(contact));
+});
 </script>
 </body>
 </html>
